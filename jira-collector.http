@@ -1,6 +1,0 @@
-@jira_collector_HostAddress = http://localhost:5038
-
-GET {{jira_collector_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,1 +1,6 @@
-GET http://localhost:5038
+@jira_collector_HostAddress = http://localhost:5038
+
+GET {{jira_collector_HostAddress}}/
+Accept: application/json
+
+###
