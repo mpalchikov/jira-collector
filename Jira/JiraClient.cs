@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace JiraCollector.Jira;
@@ -26,14 +28,14 @@ public class JiraClient
     {
         var uri = "rest/api/3/user/bulk/migration";
 
-        var queryParameters = new Dictionary<string, string?>
+        var queryParameters = new List<KeyValuePair<string, string?>>
         {
-            { "maxResults", "100" }
+            new("maxResults", "100")
         };
 
         foreach (var key in userKeys)
         {
-            queryParameters.Add("key", key);
+            queryParameters.Add(new("key", key));
         }
 
         var uriWithQuery = QueryHelpers.AddQueryString(uri, queryParameters);
@@ -42,7 +44,10 @@ public class JiraClient
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<UserAccount>>(ct) ?? [];
+        var content = await response.Content.ReadAsByteArrayAsync(ct);
+        string json = Encoding.UTF8.GetString(content);
+
+        return JsonSerializer.Deserialize<IReadOnlyCollection<UserAccount>>(json) ?? [];
     }
 }
 

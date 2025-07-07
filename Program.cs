@@ -15,22 +15,26 @@ builder.Services.AddSerilog(
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
-        .WriteTo.Console());
+        .WriteTo.Console(
+            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}"));
 
-builder.Services.AddHttpClient<JiraClient>((sp, http) =>
-{
-    var baseUrl = "";
-    var username = "";
-    var password = "";
+builder.Services
+    .AddHttpClient<JiraClient>((sp, http) =>
+    {
+        var baseUrl = "";
+        var username = "";
+        var password = "";
 
+        http.BaseAddress = new Uri(baseUrl);
 
-    http.BaseAddress = new Uri(baseUrl);
+        var authHeaderValue = $"{username}:{password}";
+        var authHeaderValueEncoded = Convert.ToBase64String(Encoding.ASCII.GetBytes(authHeaderValue));
 
-    var authHeaderValue = $"{username}:{password}";
-    var authHeaderValueEncoded = Convert.ToBase64String(Encoding.ASCII.GetBytes(authHeaderValue));
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authHeaderValueEncoded);
+    })
+    .AddHttpMessageHandler<JiraLoggingDelegatingHandler>();
 
-    http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authHeaderValueEncoded);
-});
+builder.Services.AddTransient<JiraLoggingDelegatingHandler>();
 
 var app = builder.Build();
 
