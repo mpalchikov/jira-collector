@@ -7,10 +7,12 @@ namespace JiraCollector.Jira;
 public class JiraClient
 {
     private readonly HttpClient _httpClient;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public JiraClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
+        _jsonSerializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     }
 
     public async Task<IReadOnlyCollection<Project>> GetProjects(CancellationToken ct)
@@ -19,7 +21,10 @@ public class JiraClient
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<Project>>(ct) ?? [];
+        var content = await response.Content.ReadAsByteArrayAsync(ct);
+        string json = Encoding.UTF8.GetString(content);
+
+        return JsonSerializer.Deserialize<IReadOnlyCollection<Project>>(json, _jsonSerializerOptions) ?? [];
     }
 
     public async Task<IReadOnlyCollection<UserAccount>> GetUsers(
@@ -47,7 +52,7 @@ public class JiraClient
         var content = await response.Content.ReadAsByteArrayAsync(ct);
         string json = Encoding.UTF8.GetString(content);
 
-        return JsonSerializer.Deserialize<IReadOnlyCollection<UserAccount>>(json) ?? [];
+        return JsonSerializer.Deserialize<IReadOnlyCollection<UserAccount>>(json, _jsonSerializerOptions) ?? [];
     }
 }
 

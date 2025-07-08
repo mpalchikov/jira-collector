@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using JiraCollector.Jira;
+using JiraCollector.Projects;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -36,14 +37,25 @@ builder.Services
 
 builder.Services.AddTransient<JiraLoggingDelegatingHandler>();
 
+builder.Services.AddTransient<SyncProjectsCommandHandler>();
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 
-app.MapGet("/", async (JiraClient jiraClient, CancellationToken ct) =>
-{
-    return await jiraClient.GetUsers([], ct);
-});
+app.MapGet(
+    "api/users",
+    async (JiraClient jiraClient, CancellationToken ct) =>
+    {
+        return await jiraClient.GetUsers(["alenacolour", "ymalakhova"], ct);
+    });
+
+app.MapPost(
+    "api/projects/rpc/sync",
+    async (SyncProjectsCommandHandler handler, CancellationToken ct) =>
+    {
+        await handler.Handle(new SyncProjectsCommand());
+    });
 
 app.Run();

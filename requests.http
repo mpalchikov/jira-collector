@@ -4,3 +4,5 @@ GET {{jira_collector_HostAddress}}/
 Accept: application/json
 
 ###
+
+POST {{jira_collector_HostAddress}}/api/projects/rpc/sync

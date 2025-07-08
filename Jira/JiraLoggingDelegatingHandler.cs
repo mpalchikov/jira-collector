@@ -17,14 +17,20 @@ public class JiraLoggingDelegatingHandler(ILogger<JiraLoggingDelegatingHandler> 
 
             if (response.IsSuccessStatusCode)
             {
+                var requestId = Guid.NewGuid();
                 var content = await response.Content.ReadAsByteArrayAsync(ct);
 
                 _logger.LogInformation(
-                    "Success Jira Api call: {StatusCode} {Method} {Uri} in {Elapsed} ms. {Content}",
+                    "Success Jira Api call {RequestId}: {StatusCode} {Method} {Uri} in {Elapsed} ms",
+                    requestId,
                     (int)response.StatusCode,
                     request.RequestUri,
                     request.Method,
-                    Stopwatch.GetElapsedTime(start).Milliseconds,
+                    Stopwatch.GetElapsedTime(start).Milliseconds);
+
+                _logger.LogDebug(
+                    "Jira response: {RequestId} {ResponseContent}",
+                    requestId,
                     Encoding.UTF8.GetString(content));                                
             }
             else
